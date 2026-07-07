@@ -1,0 +1,21 @@
+{
+  "name": "queuekit-monorepo",
+  "version": "0.0.1",
+  "description": "QueueKit - Zero-Config Job Queue",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "dev": "lerna run dev --parallel",
+    "lint": "lerna run lint"
+  },
+  "keywords": ["queue", "job", "message-broker"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "lerna": "^8.0.0"
+  }
+}
