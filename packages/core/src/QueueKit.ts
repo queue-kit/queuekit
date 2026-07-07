@@ -3,6 +3,7 @@ import { QueueKitConfig, Job } from "./types";
 import { IBroker } from "./broker/IBroker";
 import { InMemoryBroker } from "./broker/InMemoryBroker";
 import { RabbitMQBroker } from "./broker/RabbitMQBroker";
+import { RedisBroker } from "./broker/RedisBroker";
 import { IStore } from "./store/IStore";
 import { InMemoryStore } from "./store/InMemoryStore";
 import { PostgreSQLStore } from "./store/PostgreSQLStore";
@@ -43,6 +44,8 @@ export class QueueKit {
     switch (type) {
       case "rabbitmq":
         return new RabbitMQBroker();
+      case "redis":
+        return new RedisBroker();
       case "in-memory":
         return new InMemoryBroker();
       default:
