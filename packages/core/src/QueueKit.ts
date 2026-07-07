@@ -1,13 +1,14 @@
-import { randomUUID } from 'crypto';
-import { QueueKitConfig, Job } from './types';
-import { IBroker } from './broker/IBroker';
-import { InMemoryBroker } from './broker/InMemoryBroker';
-import { RabbitMQBroker } from './broker/RabbitMQBroker';
-import { IStore } from './store/IStore';
-import { InMemoryStore } from './store/InMemoryStore';
-import { PostgreSQLStore } from './store/PostgreSQLStore';
-import { RetryManager } from './retry/RetryManager';
-import { DLQManager } from './dlq/DLQManager';
+import { randomUUID } from "crypto";
+import { QueueKitConfig, Job } from "./types";
+import { IBroker } from "./broker/IBroker";
+import { InMemoryBroker } from "./broker/InMemoryBroker";
+import { RabbitMQBroker } from "./broker/RabbitMQBroker";
+import { IStore } from "./store/IStore";
+import { InMemoryStore } from "./store/InMemoryStore";
+import { PostgreSQLStore } from "./store/PostgreSQLStore";
+import { SQLiteStore } from "./store/SQLiteStore";
+import { RetryManager } from "./retry/RetryManager";
+import { DLQManager } from "./dlq/DLQManager";
 
 export class QueueKit {
   private config: QueueKitConfig;
@@ -19,11 +20,11 @@ export class QueueKit {
   constructor(config?: Partial<QueueKitConfig>) {
     // Default production-safe config
     this.config = {
-      broker: 'in-memory',
-      store: 'in-memory',
+      broker: "in-memory",
+      store: "in-memory",
       retry: {
         maxAttempts: 5,
-        strategy: 'exponential',
+        strategy: "exponential",
       },
       ...config,
     };
@@ -33,31 +34,37 @@ export class QueueKit {
     this.retryManager = new RetryManager(
       this.config.retry?.maxAttempts,
       this.config.retry?.baseDelay,
-      this.config.retry?.maxDelay
+      this.config.retry?.maxDelay,
     );
     this.dlqManager = new DLQManager(this.store);
   }
 
   private createBroker(type: string): IBroker {
     switch (type) {
-      case 'rabbitmq':
+      case "rabbitmq":
         return new RabbitMQBroker();
-      case 'in-memory':
+      case "in-memory":
         return new InMemoryBroker();
       default:
-        console.warn(`Broker "${type}" not yet wired up, falling back to in-memory`);
+        console.warn(
+          `Broker "${type}" not yet wired up, falling back to in-memory`,
+        );
         return new InMemoryBroker();
     }
   }
 
   private createStore(type: string): IStore {
     switch (type) {
-      case 'postgres':
+      case "postgres":
         return new PostgreSQLStore();
-      case 'in-memory':
+      case "sqlite":
+        return new SQLiteStore();
+      case "in-memory":
         return new InMemoryStore();
       default:
-        console.warn(`Store "${type}" not yet wired up, falling back to in-memory`);
+        console.warn(
+          `Store "${type}" not yet wired up, falling back to in-memory`,
+        );
         return new InMemoryStore();
     }
   }
@@ -67,7 +74,7 @@ export class QueueKit {
       id: randomUUID(),
       eventName,
       data,
-      status: 'pending',
+      status: "pending",
       attempts: 0,
       createdAt: new Date(),
     };
@@ -79,14 +86,14 @@ export class QueueKit {
 
   subscribe(eventName: string, handler: (job: Job) => Promise<void>) {
     this.broker.subscribe(eventName, async (job) => {
-      await this.store.updateJob(job.id, 'processing');
+      await this.store.updateJob(job.id, "processing");
       try {
         await handler(job);
-        await this.store.updateJob(job.id, 'completed');
+        await this.store.updateJob(job.id, "completed");
       } catch (err) {
         job.attempts += 1;
         if (this.retryManager.shouldRetry(job)) {
-          await this.store.updateJob(job.id, 'retrying');
+          await this.store.updateJob(job.id, "retrying");
           await this.retryManager.handleRetry(job);
         } else {
           await this.dlqManager.moveToDLQ(job);
@@ -98,7 +105,7 @@ export class QueueKit {
   async start() {
     await this.store.initialize();
     await this.broker.connect();
-    console.log('QueueKit started');
+    console.log("QueueKit started");
   }
 
   async stop() {
@@ -108,7 +115,14 @@ export class QueueKit {
   /** Aggregate job counts by status — powers the /queuekit/stats API and dashboard. */
   async getStats() {
     const all = await this.store.getAllJobs();
-    const counts = { pending: 0, processing: 0, completed: 0, failed: 0, retrying: 0, archived: 0 };
+    const counts = {
+      pending: 0,
+      processing: 0,
+      completed: 0,
+      failed: 0,
+      retrying: 0,
+      archived: 0,
+    };
     for (const job of all) {
       counts[job.status] = (counts[job.status] ?? 0) + 1;
     }
