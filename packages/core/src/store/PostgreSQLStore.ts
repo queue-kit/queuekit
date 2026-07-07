@@ -89,7 +89,7 @@ export class PostgreSQLStore implements IStore {
 
     const result = await this.pool.query(query, params);
 
-    return result.rows.map((row) => ({
+    return result.rows.map((row: any) => ({
       id: row.id,
       eventName: row.event_name,
       data: row.data,

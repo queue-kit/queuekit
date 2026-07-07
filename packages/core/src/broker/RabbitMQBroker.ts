@@ -3,7 +3,7 @@ import { IBroker } from './IBroker';
 import { Job } from '../types';
 
 export class RabbitMQBroker implements IBroker {
-  private connection: amqp.Connection | null = null;
+  private connection: amqp.ChannelModel | null = null;
   private channel: amqp.Channel | null = null;
   private readonly exchange = 'queuekit';
 
@@ -32,7 +32,7 @@ export class RabbitMQBroker implements IBroker {
     const queueName = `queuekit.${eventName}`;
     this.channel.assertQueue(queueName, { durable: true }).then(() => {
       this.channel!.bindQueue(queueName, this.exchange, eventName);
-      this.channel!.consume(queueName, async (msg) => {
+      this.channel!.consume(queueName, async (msg: amqp.ConsumeMessage | null) => {
         if (!msg) return;
         const job: Job = JSON.parse(msg.content.toString());
         try {

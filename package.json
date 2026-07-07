@@ -12,8 +12,12 @@
     "dev": "lerna run dev --parallel",
     "lint": "lerna run lint"
   },
-  "keywords": ["queue", "job", "message-broker"],
-  "author": "Your Name",
+  "keywords": [
+    "queue",
+    "job",
+    "message-broker"
+  ],
+  "author": "Syed Farrukh Ahmed",
   "license": "MIT",
   "devDependencies": {
     "lerna": "^8.0.0"
