@@ -14,7 +14,8 @@
   "license": "MIT",
   "dependencies": {
     "inquirer": "^9.0.0",
-    "commander": "^11.0.0"
+    "commander": "^11.0.0",
+    "queueway": "*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

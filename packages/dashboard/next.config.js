@@ -5,7 +5,7 @@ const nextConfig = {
     return [
       {
         source: '/queueway/:path*',
-        destination: `${process.env.QUEUEWAY_API_URL || 'http://localhost:3000'}/queueway/:path*`,
+        destination: `${process.env.QUEUEWAY_API_URL || 'http://localhost:4287'}/queueway/:path*`,
       },
     ];
   },

@@ -1,6 +1,6 @@
-import sqlite3 from 'sqlite3';
-import { IStore } from './IStore';
-import { Job } from '../types';
+import sqlite3 from "sqlite3";
+import { IStore } from "./IStore";
+import { Job } from "../types";
 
 /**
  * File-based store using SQLite — good for local dev / single-server
@@ -9,7 +9,7 @@ import { Job } from '../types';
 export class SQLiteStore implements IStore {
   private db: sqlite3.Database;
 
-  constructor(filename = process.env.SQLITE_PATH || './queueway.db') {
+  constructor(filename = process.env.SQLITE_PATH || "./queueway.db") {
     this.db = new sqlite3.Database(filename);
   }
 
@@ -26,9 +26,9 @@ export class SQLiteStore implements IStore {
         )`,
         (err) => {
           if (err) return reject(err);
-          console.log('✅ SQLite initialized');
+          console.log("✅ SQLite initialized");
           resolve();
-        }
+        },
       );
     });
   }
@@ -46,7 +46,7 @@ export class SQLiteStore implements IStore {
           job.attempts,
           job.createdAt.toISOString(),
         ],
-        (err) => (err ? reject(err) : resolve())
+        (err) => (err ? reject(err) : resolve()),
       );
     });
   }
@@ -60,35 +60,47 @@ export class SQLiteStore implements IStore {
           if (err) return reject(err);
           if (!row) return resolve(null);
           resolve(this.rowToJob(row));
-        }
+        },
       );
     });
   }
 
-  async updateJob(jobId: string, status: string): Promise<void> {
+  async updateJob(
+    jobId: string,
+    status: string,
+    attempts?: number,
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.db.run(
-        `UPDATE queueway_jobs SET status = ? WHERE id = ?`,
-        [status, jobId],
-        (err) => (err ? reject(err) : resolve())
-      );
+      if (attempts !== undefined) {
+        this.db.run(
+          `UPDATE queueway_jobs SET status = ?, attempts = ? WHERE id = ?`,
+          [status, attempts, jobId],
+          (err) => (err ? reject(err) : resolve()),
+        );
+      } else {
+        this.db.run(
+          `UPDATE queueway_jobs SET status = ? WHERE id = ?`,
+          [status, jobId],
+          (err) => (err ? reject(err) : resolve()),
+        );
+      }
     });
   }
 
   async getAllJobs(status?: string, limit?: number): Promise<Job[]> {
     return new Promise((resolve, reject) => {
-      let query = 'SELECT * FROM queueway_jobs';
+      let query = "SELECT * FROM queueway_jobs";
       const params: any[] = [];
 
       if (status) {
-        query += ' WHERE status = ?';
+        query += " WHERE status = ?";
         params.push(status);
       }
 
-      query += ' ORDER BY created_at DESC';
+      query += " ORDER BY created_at DESC";
 
       if (limit) {
-        query += ' LIMIT ?';
+        query += " LIMIT ?";
         params.push(limit);
       }
 
@@ -108,5 +120,34 @@ export class SQLiteStore implements IStore {
       attempts: row.attempts,
       createdAt: new Date(row.created_at),
     };
+  }
+
+  async recoverStuckJobs(): Promise<Job[]> {
+    const stuckStatuses = ["pending", "processing", "retrying"];
+    const placeholders = stuckStatuses.map(() => "?").join(",");
+
+    return new Promise((resolve, reject) => {
+      this.db.all(
+        `SELECT * FROM queueway_jobs WHERE status IN (${placeholders})`,
+        stuckStatuses,
+        (err, rows: any[]) => {
+          if (err) return reject(err);
+
+          const stuckJobs = rows.map((row) => this.rowToJob(row));
+          if (stuckJobs.length === 0) return resolve([]);
+
+          this.db.run(
+            `UPDATE queueway_jobs SET status = 'pending' WHERE status IN (${placeholders})`,
+            stuckStatuses,
+            (updateErr) => {
+              if (updateErr) return reject(updateErr);
+              resolve(
+                stuckJobs.map((j) => ({ ...j, status: "pending" as const })),
+              );
+            },
+          );
+        },
+      );
+    });
   }
 }

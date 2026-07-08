@@ -1,5 +1,5 @@
-import { IStore } from './IStore';
-import { Job } from '../types';
+import { IStore } from "./IStore";
+import { Job } from "../types";
 
 /**
  * Zero-config default store. Keeps jobs in memory (process lifetime only).
@@ -10,7 +10,9 @@ export class InMemoryStore implements IStore {
   private jobs: Map<string, Job> = new Map();
 
   async initialize(): Promise<void> {
-    console.log('✅ In-Memory store ready (data will not persist across restarts)');
+    console.log(
+      "✅ In-Memory store ready (data will not persist across restarts)",
+    );
   }
 
   async saveJob(job: Job): Promise<void> {
@@ -21,10 +23,15 @@ export class InMemoryStore implements IStore {
     return this.jobs.get(jobId) ?? null;
   }
 
-  async updateJob(jobId: string, status: string): Promise<void> {
+  async updateJob(
+    jobId: string,
+    status: string,
+    attempts?: number,
+  ): Promise<void> {
     const job = this.jobs.get(jobId);
     if (!job) return;
-    job.status = status as Job['status'];
+    job.status = status as Job["status"];
+    if (attempts !== undefined) job.attempts = attempts;
     this.jobs.set(jobId, job);
   }
 
@@ -42,5 +49,11 @@ export class InMemoryStore implements IStore {
     }
 
     return jobs;
+  }
+
+  async recoverStuckJobs(): Promise<Job[]> {
+    // Nothing to recover: if the process restarted, this Map started empty
+    // this run — there's no "previous state" for an in-memory store to lose.
+    return [];
   }
 }

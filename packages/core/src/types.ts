@@ -1,6 +1,9 @@
+export type BrokerType = "in-memory" | "rabbitmq" | "redis";
+export type StoreType = "in-memory" | "sqlite" | "postgres";
+
 export interface QueuewayConfig {
-  broker: string;
-  store: string;
+  broker: BrokerType;
+  store: StoreType;
   retry?: {
     maxAttempts: number;
     strategy: string;
@@ -10,12 +13,12 @@ export interface QueuewayConfig {
 }
 
 export type JobStatus =
-  | 'pending'
-  | 'processing'
-  | 'completed'
-  | 'failed'
-  | 'retrying'
-  | 'archived';
+  | "pending"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "retrying"
+  | "archived";
 
 export interface Job {
   id: string;

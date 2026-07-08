@@ -4,9 +4,9 @@
   "description": "Queueway dashboard (Next.js App Router + shadcn/ui)",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "next dev -p 4288",
     "build": "next build",
-    "start": "next start -p 3001",
+    "start": "next start -p 4288",
     "lint": "next lint"
   },
   "dependencies": {
