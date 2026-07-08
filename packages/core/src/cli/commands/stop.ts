@@ -1,18 +1,19 @@
+import { logger } from "../../logging/Logger";
 import { readPidFile, removePidFile, isProcessAlive } from "../lib/daemon";
 
 export async function stop() {
   const pidInfo = readPidFile();
 
   if (!pidInfo) {
-    console.log("ℹ️  No background Queueway server found.");
-    console.log(
+    logger.info("ℹ️  No background Queueway server found.");
+    logger.info(
       "   If it's running in the foreground, just press Ctrl+C in its terminal.",
     );
     return;
   }
 
   if (!isProcessAlive(pidInfo.pid)) {
-    console.log(
+    logger.info(
       "ℹ️  pidfile found but that process is no longer running — cleaning up.",
     );
     removePidFile();
@@ -20,16 +21,16 @@ export async function stop() {
   }
 
   process.kill(pidInfo.pid, "SIGTERM");
-  console.log(`🛑 Stop signal sent to PID ${pidInfo.pid}...`);
+  logger.info(`🛑 Stop signal sent to PID ${pidInfo.pid}...`);
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   if (isProcessAlive(pidInfo.pid)) {
-    console.log(
+    logger.info(
       "⚠️  Still running — it may need another moment, or try again.",
     );
   } else {
     removePidFile();
-    console.log("✅ Queueway server stopped.");
+    logger.info("✅ Queueway server stopped.");
   }
 }

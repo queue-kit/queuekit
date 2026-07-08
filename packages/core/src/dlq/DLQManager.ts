@@ -1,3 +1,4 @@
+import { logger } from "../logging/Logger";
 import { IStore } from "../store/IStore";
 import { Job } from "../types";
 
@@ -6,7 +7,7 @@ export class DLQManager {
 
   async moveToDLQ(job: Job): Promise<void> {
     await this.store.updateJob(job.id, "failed", job.attempts);
-    console.log(`Job ${job.id} moved to DLQ`);
+    logger.info(`Job ${job.id} moved to DLQ`);
   }
 
   async getFailedJobs(limit = 50): Promise<Job[]> {
@@ -15,6 +16,6 @@ export class DLQManager {
 
   async retryFromDLQ(jobId: string): Promise<void> {
     await this.store.updateJob(jobId, "pending", 0);
-    console.log(`Job ${jobId} re-queued from DLQ`);
+    logger.info(`Job ${jobId} re-queued from DLQ`);
   }
 }

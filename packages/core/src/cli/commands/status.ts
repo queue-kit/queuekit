@@ -1,3 +1,4 @@
+import { logger } from "../../logging/Logger";
 import { readPidFile, isProcessAlive } from "../lib/daemon";
 
 export async function status(options: { port?: string } = {}) {
@@ -15,26 +16,26 @@ export async function status(options: { port?: string } = {}) {
   }
 
   if (reachable) {
-    console.log(`✅ Queueway is RUNNING — ${url}`);
-    console.log(`   Status: ${healthData.status}`);
+    logger.info(`✅ Queueway is RUNNING — ${url}`);
+    logger.info(`   Status: ${healthData.status}`);
     if (pidInfo && isProcessAlive(pidInfo.pid)) {
-      console.log(
+      logger.info(
         `   Mode: background (PID ${pidInfo.pid}, started ${pidInfo.startedAt})`,
       );
     } else {
-      console.log("   Mode: foreground (or started outside this CLI)");
+      logger.info("   Mode: foreground (or started outside this CLI)");
     }
   } else {
-    console.log(`❌ Queueway is NOT reachable at ${url}`);
+    logger.info(`❌ Queueway is NOT reachable at ${url}`);
     if (pidInfo) {
       const alive = isProcessAlive(pidInfo.pid);
-      console.log(
+      logger.info(
         alive
           ? `   ⚠️  A background process (PID ${pidInfo.pid}) is still running but isn't responding — it may be stuck.`
           : `   Stale pidfile found (PID ${pidInfo.pid} is no longer running) — safe to ignore or run \`queueway stop\`.`,
       );
     } else {
-      console.log(
+      logger.info(
         "   No background server found either. Run `queueway start` to start one.",
       );
     }

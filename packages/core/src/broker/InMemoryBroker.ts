@@ -1,12 +1,13 @@
-import { IBroker } from './IBroker';
-import { Job } from '../types';
+import { IBroker } from "./IBroker";
+import { Job } from "../types";
+import { logger } from "../logging/Logger";
 
 export class InMemoryBroker implements IBroker {
   private jobs: Map<string, Job[]> = new Map();
   private handlers: Map<string, Array<(job: Job) => Promise<void>>> = new Map();
 
   async connect(): Promise<void> {
-    console.log('✅ In-Memory broker ready');
+    logger.info("✅ In-Memory broker ready");
   }
 
   async publish(eventName: string, job: Job): Promise<void> {

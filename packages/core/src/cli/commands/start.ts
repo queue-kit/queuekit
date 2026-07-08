@@ -10,6 +10,7 @@ import {
   removePidFile,
   isProcessAlive,
 } from "../lib/daemon";
+import { logger } from "../../logging/Logger";
 
 const CONFIG_FILENAMES = ["queueway.config.js", "queueway.config.cjs"];
 const JOBS_FILENAMES = ["queueway.jobs.js", "queueway.jobs.cjs"];
@@ -38,10 +39,10 @@ export async function start(options: StartOptions = {}) {
   if (!isDaemonChild) {
     const existing = readPidFile();
     if (existing && isProcessAlive(existing.pid)) {
-      console.log(
+      logger.info(
         `⚠️  Queueway already running in the background (PID ${existing.pid}, port ${existing.port}).`,
       );
-      console.log("   Run `queueway stop` first if you want to restart it.");
+      logger.info("   Run `queueway stop` first if you want to restart it.");
       return;
     }
   }
@@ -91,10 +92,10 @@ function launchDetached(port: string) {
   writePidFile(child.pid!, Number(port));
   child.unref();
 
-  console.log(`🚀 Queueway started in the background (PID ${child.pid}).`);
-  console.log(`   Dashboard/API: http://localhost:${port}`);
-  console.log(`   Logs: ${logFilePath()}`);
-  console.log(
+  logger.info(`🚀 Queueway started in the background (PID ${child.pid}).`);
+  logger.info(`   Dashboard/API: http://localhost:${port}`);
+  logger.info(`   Logs: ${logFilePath()}`);
+  logger.info(
     "   Run `queueway status` to check it, or `queueway stop` to stop it.",
   );
 }
@@ -104,16 +105,16 @@ function runWatchdog(port: string, isDaemonChild: boolean) {
   const jobsPath = findFile(JOBS_FILENAMES);
 
   if (!configPath) {
-    console.log(
+    logger.info(
       "ℹ️  No queueway.config.js found — using zero-config defaults (in-memory broker + store).",
     );
-    console.log("   Run `queueway init` to create one.");
+    logger.info("   Run `queueway init` to create one.");
   }
   if (!jobsPath) {
-    console.log(
+    logger.info(
       "ℹ️  No queueway.jobs.js found — server will run with no job handlers registered.",
     );
-    console.log("   Run `queueway init` to generate a starter file.");
+    logger.info("   Run `queueway init` to generate a starter file.");
   }
 
   process.env.QUEUEWAY_CONFIG_PATH = configPath ?? "";
@@ -130,7 +131,7 @@ function runWatchdog(port: string, isDaemonChild: boolean) {
   let child: ChildProcess;
 
   const launch = () => {
-    console.log("🚀 Starting Queueway server...");
+    logger.info("🚀 Starting Queueway server...");
     child = spawn(
       process.execPath,
       [path.join(__dirname, "..", "server-bootstrap.js")],
@@ -147,7 +148,7 @@ function runWatchdog(port: string, isDaemonChild: boolean) {
         signal === "SIGTERM" ||
         code === 0
       ) {
-        console.log("👋 Queueway server stopped.");
+        logger.info("👋 Queueway server stopped.");
         if (isDaemonChild) removePidFile();
         return;
       }
@@ -160,14 +161,14 @@ function runWatchdog(port: string, isDaemonChild: boolean) {
       restartCount += 1;
 
       if (restartCount > MAX_RESTARTS_PER_WINDOW) {
-        console.error(
+        logger.error(
           `❌ Server crashed ${restartCount} times in the last minute — giving up auto-restart. Check the errors above.`,
         );
         if (isDaemonChild) removePidFile();
         process.exit(1);
       }
 
-      console.warn(
+      logger.warn(
         `⚠️  Server exited unexpectedly (code ${code}). Auto-restarting in ${RESTART_DELAY_MS}ms... (attempt ${restartCount}/${MAX_RESTARTS_PER_WINDOW})`,
       );
       setTimeout(launch, RESTART_DELAY_MS);

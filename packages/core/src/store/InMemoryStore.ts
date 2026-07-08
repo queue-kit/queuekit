@@ -1,5 +1,6 @@
 import { IStore } from "./IStore";
 import { Job } from "../types";
+import { logger } from "../logging/Logger";
 
 /**
  * Zero-config default store. Keeps jobs in memory (process lifetime only).
@@ -10,7 +11,7 @@ export class InMemoryStore implements IStore {
   private jobs: Map<string, Job> = new Map();
 
   async initialize(): Promise<void> {
-    console.log(
+    logger.info(
       "✅ In-Memory store ready (data will not persist across restarts)",
     );
   }

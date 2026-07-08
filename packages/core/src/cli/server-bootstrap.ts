@@ -4,6 +4,8 @@
  * detect the exit and automatically restart it (auto-heal).
  */
 
+import { logger } from "../logging/Logger";
+
 async function main() {
   const { Queueway, startServer } = require("../index");
 
@@ -24,7 +26,7 @@ async function main() {
     if (typeof register === "function") {
       register(queue);
     } else {
-      console.warn(
+      logger.warn(
         `⚠️  ${jobsPath} was found but doesn't export a function — no job handlers registered.`,
       );
     }
@@ -33,21 +35,21 @@ async function main() {
   await queue.start();
   startServer(queue, port);
 
-  console.log(
+  logger.info(
     `✅ Queueway running — dashboard/API at http://localhost:${port}`,
   );
 }
 
 main().catch((err) => {
-  console.error("❌ Queueway server crashed during startup:", err);
+  logger.error("❌ Queueway server crashed during startup:", err);
   process.exit(1); // non-zero exit tells the parent process to auto-restart
 });
 
-process.on("uncaughtException", (err) => {
-  console.error("❌ Uncaught exception:", err);
+process.on("uncaughtException", (err: any) => {
+  logger.error("❌ Uncaught exception:", err);
   process.exit(1);
 });
-process.on("unhandledRejection", (err) => {
-  console.error("❌ Unhandled rejection:", err);
+process.on("unhandledRejection", (err: any) => {
+  logger.error("❌ Unhandled rejection:", err);
   process.exit(1);
 });

@@ -4,20 +4,23 @@
  * Run with: npx ts-node examples/basic-server.ts
  * Then visit: http://localhost:3000/queueway/stats
  */
-import { Queueway, startServer } from 'queueway';
+import { Queueway, startServer } from "queueway";
 
 async function main() {
-  const queue = new Queueway({ broker: 'in-memory', store: 'in-memory' });
+  const queue = new Queueway({ broker: "in-memory", store: "in-memory" });
 
-  queue.subscribe('email.send', async (job) => {
-    console.log('Processing email job:', job.data);
+  queue.subscribe("email.send", async (job) => {
+    console.log("Processing email job:", job.data);
   });
 
   await queue.start();
   startServer(queue, 3000);
 
   // Simulate some traffic
-  await queue.publish('email.send', { to: 'user@example.com', subject: 'Welcome!' });
+  await queue.publish("email.send", {
+    to: "user@example.com",
+    subject: "Welcome!",
+  });
 }
 
 main().catch(console.error);

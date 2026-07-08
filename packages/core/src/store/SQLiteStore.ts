@@ -1,6 +1,7 @@
 import sqlite3 from "sqlite3";
 import { IStore } from "./IStore";
 import { Job } from "../types";
+import { logger } from "../logging/Logger";
 
 /**
  * File-based store using SQLite — good for local dev / single-server
@@ -26,7 +27,7 @@ export class SQLiteStore implements IStore {
         )`,
         (err) => {
           if (err) return reject(err);
-          console.log("✅ SQLite initialized");
+          logger.info("✅ SQLite initialized");
           resolve();
         },
       );

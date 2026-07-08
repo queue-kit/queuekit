@@ -34,24 +34,27 @@ npm run build
 ### Publish and subscribe to jobs
 
 ```typescript
-import { Queueway } from 'queueway';
+import { Queueway } from "queueway";
 
-const queue = new Queueway({ broker: 'in-memory', store: 'in-memory' });
+const queue = new Queueway({ broker: "in-memory", store: "in-memory" });
 
-queue.subscribe('email.send', async (job) => {
-  console.log('Sending email:', job.data);
+queue.subscribe("email.send", async (job) => {
+  logger.info("Sending email:", job.data);
 });
 
 await queue.start();
-await queue.publish('email.send', { to: 'user@example.com', subject: 'Welcome!' });
+await queue.publish("email.send", {
+  to: "user@example.com",
+  subject: "Welcome!",
+});
 ```
 
 ### Add the REST API + dashboard
 
 ```typescript
-import { Queueway, startServer } from 'queueway';
+import { Queueway, startServer } from "queueway";
 
-const queue = new Queueway({ broker: 'in-memory', store: 'in-memory' });
+const queue = new Queueway({ broker: "in-memory", store: "in-memory" });
 await queue.start();
 startServer(queue, 3000); // http://localhost:3000/queueway/health, /stats, /jobs, /dlq
 ```
@@ -75,24 +78,24 @@ node packages/cli/dist/index.js health
 
 ## 🧱 Brokers & Stores
 
-| Broker | Status | Notes |
-|---|---|---|
-| In-Memory | ✅ | Zero-config default, testing |
-| RabbitMQ | ✅ | Production-recommended |
-| Redis | ✅ | Lightweight alternative (Lists-based) |
-| Kafka / AWS SQS | ⏭️ Planned | |
+| Broker          | Status     | Notes                                 |
+| --------------- | ---------- | ------------------------------------- |
+| In-Memory       | ✅         | Zero-config default, testing          |
+| RabbitMQ        | ✅         | Production-recommended                |
+| Redis           | ✅         | Lightweight alternative (Lists-based) |
+| Kafka / AWS SQS | ⏭️ Planned |                                       |
 
-| Store | Status | Notes |
-|---|---|---|
-| In-Memory | ✅ | Zero-config default, testing |
-| PostgreSQL | ✅ | Production-recommended |
-| SQLite | ✅ | File-based, no external DB needed |
-| MongoDB / MySQL | ⏭️ Planned | |
+| Store           | Status     | Notes                             |
+| --------------- | ---------- | --------------------------------- |
+| In-Memory       | ✅         | Zero-config default, testing      |
+| PostgreSQL      | ✅         | Production-recommended            |
+| SQLite          | ✅         | File-based, no external DB needed |
+| MongoDB / MySQL | ⏭️ Planned |                                   |
 
 Configure via the constructor:
 
 ```typescript
-new Queueway({ broker: 'redis', store: 'postgres' });
+new Queueway({ broker: "redis", store: "postgres" });
 ```
 
 Connection details are read from environment variables (`RABBITMQ_URL`, `REDIS_URL`, `DATABASE_URL`, `SQLITE_PATH`).

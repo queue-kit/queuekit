@@ -10,6 +10,7 @@ import { PostgreSQLStore } from "./store/PostgreSQLStore";
 import { SQLiteStore } from "./store/SQLiteStore";
 import { RetryManager } from "./retry/RetryManager";
 import { DLQManager } from "./dlq/DLQManager";
+import { logger } from "./logging/Logger";
 
 export class Queueway {
   private config: QueuewayConfig;
@@ -49,7 +50,7 @@ export class Queueway {
       case "in-memory":
         return new InMemoryBroker();
       default:
-        console.warn(
+        logger.warn(
           `Broker "${type}" not yet wired up, falling back to in-memory`,
         );
         return new InMemoryBroker();
@@ -65,7 +66,7 @@ export class Queueway {
       case "in-memory":
         return new InMemoryStore();
       default:
-        console.warn(
+        logger.warn(
           `Store "${type}" not yet wired up, falling back to in-memory`,
         );
         return new InMemoryStore();
@@ -119,12 +120,12 @@ export class Queueway {
       await this.broker.publish(job.eventName, job);
     }
     if (recovered.length > 0) {
-      console.log(
+      logger.info(
         `♻️  Recovered ${recovered.length} stuck job(s) from a previous run`,
       );
     }
 
-    console.log("Queueway started");
+    logger.info("Queueway started");
   }
 
   async stop() {

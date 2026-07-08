@@ -2,6 +2,7 @@ import path from "path";
 import express, { Express, Request, Response } from "express";
 import { Queueway } from "../Queueway";
 import { HealthCheck } from "../monitoring/HealthCheck";
+import { logger } from "../logging/Logger";
 
 /**
  * Creates the Queueway HTTP API (used by the CLI, the dashboard, and
@@ -55,6 +56,6 @@ export function createServer(queue: Queueway): Express {
 export function startServer(queue: Queueway, port = 4287) {
   const app = createServer(queue);
   return app.listen(port, () => {
-    console.log(`✅ Queueway API listening on http://localhost:${port}`);
+    logger.info(`✅ Queueway API listening on http://localhost:${port}`);
   });
 }

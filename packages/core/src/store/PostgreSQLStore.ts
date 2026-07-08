@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { IStore } from "./IStore";
 import { Job } from "../types";
+import { logger } from "../logging/Logger";
 
 export class PostgreSQLStore implements IStore {
   private pool: Pool;
@@ -27,7 +28,7 @@ export class PostgreSQLStore implements IStore {
     `;
 
     await this.pool.query(query);
-    console.log("✅ PostgreSQL initialized");
+    logger.info("✅ PostgreSQL initialized");
   }
 
   async saveJob(job: Job): Promise<void> {
