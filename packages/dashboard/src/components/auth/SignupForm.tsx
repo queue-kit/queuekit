@@ -57,7 +57,7 @@ export function SignupForm({ onSuccess }: { onSuccess: () => void }) {
           {loading ? 'Creating account…' : 'Create account'}
         </Button>
         <p className="text-xs text-muted-foreground">
-          We'll email you a copy of your login details so you always have a record of them.
+          We'll send a welcome email to confirm your account — your password is never emailed, only you know it.
         </p>
       </form>
     </AuthLayout>

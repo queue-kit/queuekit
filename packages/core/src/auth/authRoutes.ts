@@ -42,7 +42,7 @@ export function registerAuthRoutes(app: Express, authStore: AuthStore) {
       });
 
       // Fire-and-forget — don't block signup on email delivery.
-      sendWelcomeEmail(user.email, password).catch(() => {});
+      sendWelcomeEmail(user.email).catch(() => {});
 
       res.json({ ok: true, email: user.email });
     } catch (err: any) {
