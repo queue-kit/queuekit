@@ -118,7 +118,6 @@ function runWatchdog(port: string, isDaemonChild: boolean) {
   }
 
   process.env.QUEUEWAY_CONFIG_PATH = configPath ?? "";
-  process.env.QUEUEWAY_JOBS_PATH = jobsPath ?? "";
   process.env.QUEUEWAY_PORT = port;
 
   if (isDaemonChild) {

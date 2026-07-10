@@ -8,10 +8,22 @@ export async function health(
   url = process.env.QUEUEWAY_API_URL || "http://localhost:4287",
 ) {
   try {
-    const [healthRes, statsRes]: [any, any] = await Promise.all([
-      fetch(`${url}/queueway/health`).then((r) => r.json()),
-      fetch(`${url}/queueway/stats`).then((r) => r.json()),
+    const [healthResRaw, statsResRaw] = await Promise.all([
+      fetch(`${url}/queueway/health`),
+      fetch(`${url}/queueway/stats`),
     ]);
+
+    if (healthResRaw.status === 401 || statsResRaw.status === 401) {
+      logger.info(`✅ Queueway API reachable at ${url}`);
+      logger.info(
+        "   The server is up, but health/stats details now require dashboard login.",
+      );
+      logger.info(`   Log in at ${url} to see full details.`);
+      return;
+    }
+
+    const healthRes: any = await healthResRaw.json();
+    const statsRes: any = await statsResRaw.json();
 
     logger.info(`✅ Queueway API reachable at ${url}`);
     logger.info(`   Status:   ${healthRes.status}`);

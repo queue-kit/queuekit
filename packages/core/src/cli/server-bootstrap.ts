@@ -14,7 +14,6 @@ async function main() {
   const { Queueway, startServer } = require("../index");
 
   const configPath = process.env.QUEUEWAY_CONFIG_PATH;
-  const jobsPath = process.env.QUEUEWAY_JOBS_PATH;
   const port = Number(process.env.QUEUEWAY_PORT || 4287);
 
   const config = configPath
@@ -23,19 +22,9 @@ async function main() {
 
   const queue = new Queueway(config);
 
-  if (jobsPath) {
-    const registerJobs = require(jobsPath);
-    const register =
-      typeof registerJobs === "function" ? registerJobs : registerJobs?.default;
-    if (typeof register === "function") {
-      register(queue);
-    } else {
-      logger.warn(
-        `⚠️  ${jobsPath} was found but doesn't export a function — no job handlers registered.`,
-      );
-    }
-  }
-
+  // Note: queue.start() auto-loads queueway.jobs.js itself (from cwd) —
+  // don't also require() it here, or every handler ends up registered
+  // twice and every job gets processed twice.
   await queue.start();
   await startServer(queue, port);
 

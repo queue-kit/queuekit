@@ -1,4 +1,5 @@
 import sqlite3 from "sqlite3";
+import fs from "fs";
 import path from "path";
 import { randomUUID, randomBytes } from "crypto";
 import { logger } from "../logging/Logger";
@@ -20,6 +21,8 @@ export class AuthStore {
 
   constructor(filename?: string) {
     const dbPath = filename ?? path.resolve(process.cwd(), ".queueway", "auth.db");
+    const dir = path.dirname(dbPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     this.db = new sqlite3.Database(dbPath);
   }
 

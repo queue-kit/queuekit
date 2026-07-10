@@ -7,17 +7,27 @@ export async function status(options: { port?: string } = {}) {
   const url = `http://localhost:${port}`;
 
   let reachable = false;
+  let requiresLogin = false;
   let healthData: any = null;
   try {
-    healthData = await fetch(`${url}/queueway/health`).then((r) => r.json());
+    const res = await fetch(`${url}/queueway/health`);
     reachable = true;
+    if (res.status === 401) {
+      requiresLogin = true;
+    } else {
+      healthData = await res.json();
+    }
   } catch {
     reachable = false;
   }
 
   if (reachable) {
     logger.info(`✅ Queueway is RUNNING — ${url}`);
-    logger.info(`   Status: ${healthData.status}`);
+    if (requiresLogin) {
+      logger.info("   (Log in via the dashboard to see full health details — the server itself is up.)");
+    } else {
+      logger.info(`   Status: ${healthData?.status ?? "unknown"}`);
+    }
     if (pidInfo && isProcessAlive(pidInfo.pid)) {
       logger.info(
         `   Mode: background (PID ${pidInfo.pid}, started ${pidInfo.startedAt})`,

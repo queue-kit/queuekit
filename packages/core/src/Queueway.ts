@@ -154,8 +154,11 @@ export class Queueway {
 
   private loadJobsFile(): void {
     try {
-      const jobsPath = path.resolve(process.cwd(), "queueway.jobs.js");
-      if (!fs.existsSync(jobsPath)) return;
+      const candidates = ["queueway.jobs.js", "queueway.jobs.cjs"];
+      const jobsPath = candidates
+        .map((name) => path.resolve(process.cwd(), name))
+        .find((p) => fs.existsSync(p));
+      if (!jobsPath) return;
 
       const registerJobs = require(jobsPath);
       const register = typeof registerJobs === "function" ? registerJobs : registerJobs?.default;

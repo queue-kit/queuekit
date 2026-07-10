@@ -142,18 +142,27 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
     try {
       const jobsUrl = filter === 'all' ? '/queueway/jobs?limit=25' : `/queueway/jobs?status=${filter}&limit=25`;
       const [statsRes, jobsRes, healthRes] = await Promise.all([
-        fetch('/queueway/stats').then((r) => r.json()),
-        fetch(jobsUrl).then((r) => r.json()),
-        fetch('/queueway/health').then((r) => r.json()),
+        fetch('/queueway/stats'),
+        fetch(jobsUrl),
+        fetch('/queueway/health'),
       ]);
-      setStats(statsRes);
-      setJobs(jobsRes);
-      setHealth(healthRes);
+
+      // Session expired (or logged out elsewhere) while the dashboard was
+      // open — go back to the login screen instead of treating the error
+      // response body as if it were real data.
+      if (statsRes.status === 401 || jobsRes.status === 401 || healthRes.status === 401) {
+        onLogout();
+        return;
+      }
+
+      setStats(await statsRes.json());
+      setJobs(await jobsRes.json());
+      setHealth(await healthRes.json());
       setError(null);
     } catch (err: any) {
       setError(err.message ?? 'Could not reach Queueway API');
     }
-  }, [filter]);
+  }, [filter, onLogout]);
 
   useEffect(() => {
     refresh();
