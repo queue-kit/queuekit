@@ -36,6 +36,8 @@
 
 ## 🚀 Quick Start
 
+**For production**, run the setup wizard first — this is required, not optional (skipping it means you're stuck with In-Memory defaults, and no data survives a restart):
+
 ```bash
 npm install queueway
 npx queueway init      # pick a store (SQLite recommended) and broker (In-Memory)
@@ -43,6 +45,12 @@ npx queueway start     # boots the queue engine + REST API + dashboard, all on o
 ```
 
 Open **http://localhost:4287** — you'll be asked to create a one-time dashboard account (email + password), then land on the live dashboard.
+
+**For dev / quick testing**, you can skip `init` entirely and just start using it — zero setup:
+
+```javascript
+const { queue } = require('queueway'); // defaults to In-Memory broker + store
+```
 
 ### Use it as a library in your own app
 
