@@ -5,6 +5,7 @@ import { Queueway } from "../Queueway";
 import { logger } from "../logging/Logger";
 import { AuthStore } from "../auth/AuthStore";
 import { registerAuthRoutes, requireAuth } from "../auth/authRoutes";
+import { getLocalNetworkIPs, getPublicIP } from "./networkInfo";
 
 /** Wraps an async route handler so thrown/rejected errors become a 500
  * response instead of an unhandled rejection that could crash the process. */
@@ -85,7 +86,21 @@ export async function createServer(queue: Queueway): Promise<Express> {
 /** Convenience helper: build + start the server on the given port. */
 export async function startServer(queue: Queueway, port = 4287) {
   const app = await createServer(queue);
-  return app.listen(port, () => {
+  const server = app.listen(port, () => {
     logger.info(`✅ Queueway API listening on http://localhost:${port}`);
   });
+
+  // Best-effort: also show how to reach this server from elsewhere — the
+  // "localhost" URL above is only useful on this exact machine, which isn't
+  // helpful if this is running on a remote/cloud server.
+  for (const ip of getLocalNetworkIPs()) {
+    logger.info(`   Also reachable on your local network at: http://${ip}:${port}`);
+  }
+  getPublicIP().then((publicIP) => {
+    if (publicIP) {
+      logger.info(`   If this is a cloud server, your public URL is: http://${publicIP}:${port}`);
+    }
+  });
+
+  return server;
 }
