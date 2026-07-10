@@ -10,7 +10,8 @@
     "build": "lerna run build && node scripts/bundle-dashboard.js",
     "test": "lerna run test",
     "dev": "lerna run dev --parallel",
-    "lint": "lerna run lint"
+    "lint": "lerna run lint",
+    "cli": "node packages/core/dist/cli/index.js"
   },
   "keywords": [
     "queue",
