@@ -12,3 +12,5 @@ lerna-debug.log
 .queueway/
 packages/dashboard/out/
 packages/core/public/
+packages/core/README.md
+packages/core/LICENSE

@@ -33,3 +33,17 @@ if (!fs.existsSync(SRC)) {
 fs.rmSync(DEST, { recursive: true, force: true });
 copyRecursive(SRC, DEST);
 console.log(`✅ Bundled dashboard into ${path.relative(process.cwd(), DEST)}`);
+
+// Also copy README.md and LICENSE into packages/core — npm publish only
+// picks up files that physically exist inside the published package folder,
+// not the monorepo root, so without this the published package would have
+// no README/LICENSE showing on its npmjs.com page.
+const ROOT = path.join(__dirname, '..');
+const CORE_DIR = path.join(ROOT, 'packages', 'core');
+for (const file of ['README.md', 'LICENSE']) {
+  const src = path.join(ROOT, file);
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, path.join(CORE_DIR, file));
+    console.log(`✅ Copied ${file} into packages/core`);
+  }
+}
