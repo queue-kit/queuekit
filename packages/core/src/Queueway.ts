@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { randomUUID } from "crypto";
 import { QueuewayConfig, Job } from "./types";
 import { IBroker } from "./broker/IBroker";
@@ -111,9 +113,23 @@ export class Queueway {
     });
   }
 
-  async start() {
+  /**
+   * Boots the engine: connects the store/broker, recovers any stuck jobs,
+   * and auto-loads `queueway.jobs.js` from your project root if present
+   * (so subscribe() handlers work even without going through the CLI).
+   *
+   * Pass `{ withServer: true }` to also start the REST API + dashboard on
+   * the given port (default 4287) — everything `queueway start` does,
+   * minus background mode and auto-heal, which need an external process
+   * to supervise this one (a crashed process can't restart itself; that's
+   * exactly what `queueway start`'s watchdog — or PM2/systemd/Docker for
+   * your own app — is for).
+   */
+  async start(options: { withServer?: boolean; port?: number } = {}) {
     await this.store.initialize();
     await this.broker.connect();
+
+    this.loadJobsFile();
 
     // Generic across all stores: in-memory returns [], persistent stores
     // (SQLite/Postgres) return anything left mid-flight from a previous
@@ -129,6 +145,29 @@ export class Queueway {
     }
 
     logger.info("Queueway started");
+
+    if (options.withServer) {
+      const { startServer } = await import("./server/createServer");
+      await startServer(this, options.port ?? 4287);
+    }
+  }
+
+  private loadJobsFile(): void {
+    try {
+      const jobsPath = path.resolve(process.cwd(), "queueway.jobs.js");
+      if (!fs.existsSync(jobsPath)) return;
+
+      const registerJobs = require(jobsPath);
+      const register = typeof registerJobs === "function" ? registerJobs : registerJobs?.default;
+      if (typeof register === "function") {
+        register(this);
+        logger.info("✅ Loaded job handlers from queueway.jobs.js");
+      } else {
+        logger.warn("⚠️  queueway.jobs.js was found but doesn't export a function — no handlers registered.");
+      }
+    } catch (err: any) {
+      logger.warn("⚠️  Found queueway.jobs.js but failed to load it", { error: String(err) });
+    }
   }
 
   async stop() {

@@ -1,7 +1,7 @@
 import path from "path";
 import express, { Express, Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
-import { Queueway } from "../Queueway";
+import type { Queueway } from "../Queueway";
 import { logger } from "../logging/Logger";
 import { AuthStore } from "../auth/AuthStore";
 import { registerAuthRoutes, requireAuth } from "../auth/authRoutes";
