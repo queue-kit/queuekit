@@ -152,24 +152,64 @@ export class Queueway {
     }
   }
 
+  /**
+   * Loads job handlers with the same freedom you'd have embedding Queueway
+   * directly in your own app — you're not boxed into one file:
+   *   1. queueway.jobs.js/.cjs — a single entry point (can itself require()
+   *      as many other files as you want; it's just where loading starts)
+   *   2. jobs/ directory — every .js/.cjs file inside is auto-loaded, so you
+   *      can freely split handlers across as many files as you like with no
+   *      manual wiring at all (jobs/email.js, jobs/payments.js, etc.)
+   * Both are optional and can be used together.
+   */
   private loadJobsFile(): void {
+    this.loadJobsEntryFile();
+    this.loadJobsDirectory();
+  }
+
+  private registerFromModule(modulePath: string, label: string): void {
+    const registerJobs = require(modulePath);
+    const register = typeof registerJobs === "function" ? registerJobs : registerJobs?.default;
+    if (typeof register === "function") {
+      register(this);
+      logger.info(`✅ Loaded job handlers from ${label}`);
+    } else {
+      logger.warn(`⚠️  ${label} was found but doesn't export a function — no handlers registered.`);
+    }
+  }
+
+  private loadJobsEntryFile(): void {
     try {
       const candidates = ["queueway.jobs.js", "queueway.jobs.cjs"];
       const jobsPath = candidates
         .map((name) => path.resolve(process.cwd(), name))
         .find((p) => fs.existsSync(p));
       if (!jobsPath) return;
-
-      const registerJobs = require(jobsPath);
-      const register = typeof registerJobs === "function" ? registerJobs : registerJobs?.default;
-      if (typeof register === "function") {
-        register(this);
-        logger.info("✅ Loaded job handlers from queueway.jobs.js");
-      } else {
-        logger.warn("⚠️  queueway.jobs.js was found but doesn't export a function — no handlers registered.");
-      }
+      this.registerFromModule(jobsPath, path.basename(jobsPath));
     } catch (err: any) {
       logger.warn("⚠️  Found queueway.jobs.js but failed to load it", { error: String(err) });
+    }
+  }
+
+  private loadJobsDirectory(): void {
+    try {
+      const dir = path.resolve(process.cwd(), "jobs");
+      if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) return;
+
+      const files = fs
+        .readdirSync(dir)
+        .filter((f) => f.endsWith(".js") || f.endsWith(".cjs"))
+        .sort();
+
+      for (const file of files) {
+        try {
+          this.registerFromModule(path.join(dir, file), `jobs/${file}`);
+        } catch (err: any) {
+          logger.warn(`⚠️  Found jobs/${file} but failed to load it`, { error: String(err) });
+        }
+      }
+    } catch (err: any) {
+      logger.warn("⚠️  Failed to read jobs/ directory", { error: String(err) });
     }
   }
 

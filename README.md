@@ -164,13 +164,15 @@ A **process** is one running instance of your program, with its own private memo
 `queueway.jobs.js` is where you define what happens for each job type:
 
 ```javascript
-// queueway.jobs.js — auto-loaded by `queueway start`
+// queueway.jobs.js — auto-loaded by `queueway start` (and by `queue.start()` too)
 module.exports = function registerJobs(queue) {
   queue.subscribe('email.welcome', async (job) => {
     console.log('Sending:', job.data);
   });
 };
 ```
+
+You're not boxed into that one file — it's just an entry point, so `require()` as many other files from it as you want. Or skip it entirely and use a **`jobs/` directory** instead: every `.js` file inside is auto-loaded, no manual wiring needed, so you can organize handlers across as many files as you like (`jobs/email.js`, `jobs/payments.js`, ...) — the same freedom you'd have embedding Queueway directly in your own app.
 
 ---
 
