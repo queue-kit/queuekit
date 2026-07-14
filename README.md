@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="packages/dashboard/public/logo.svg" alt="Queueway" width="120" />
+  <img src="https://raw.githubusercontent.com/queueway/queueway/main/packages/dashboard/public/logo.svg" alt="Queueway" width="120" />
 </p>
 
 <h1 align="center">Queueway</h1>
@@ -14,7 +14,7 @@
 
 ---
 
-> **Status:** Early access (v0.1.0). CORE engine (In-Memory + SQLite) is fully dev+prod tested. Redis, RabbitMQ, and PostgreSQL are implemented but not yet production-tested — see [Roadmap](#roadmap).
+> **Status:** Early access (v0.0.2). CORE engine (In-Memory + SQLite) is fully dev+prod tested. Redis, RabbitMQ, and PostgreSQL are implemented but not yet production-tested — see [Roadmap](#roadmap).
 
 ## ✨ Features
 
