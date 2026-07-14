@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Activity, CheckCircle2, Clock, XCircle, Circle, LogOut } from 'lucide-react';
+import { Activity, CheckCircle2, Clock, XCircle, Circle, LogOut, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { SignupForm } from '@/components/auth/SignupForm';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
@@ -137,6 +148,8 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | JobStatus>('all');
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -177,6 +190,57 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
       await refresh();
     } finally {
       setRetrying(null);
+    }
+  }
+
+  async function handleDelete(jobId: string) {
+    setDeleting(jobId);
+    try {
+      await fetch(`/queueway/jobs/${jobId}`, { method: 'DELETE' });
+      await refresh();
+      toast.success('Job deleted');
+    } catch {
+      toast.error('Could not delete job');
+    } finally {
+      setDeleting(null);
+      setConfirmDeleteId(null);
+    }
+  }
+
+  async function copyToClipboard(text: string): Promise<boolean> {
+    // Modern Clipboard API — only works on HTTPS or literally "localhost".
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        // fall through to the legacy method below
+      }
+    }
+    // Legacy fallback — works even over plain http:// on a LAN/public IP,
+    // which the modern Clipboard API refuses (insecure context).
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return success;
+    } catch {
+      return false;
+    }
+  }
+
+  async function handleCopy(data: unknown) {
+    const success = await copyToClipboard(JSON.stringify(data, null, 2));
+    if (success) {
+      toast.success('Copied job data to clipboard');
+    } else {
+      toast.error('Could not copy — try selecting the text manually');
     }
   }
 
@@ -267,7 +331,7 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
       <Card>
         <CardHeader className="p-3 sm:p-6">
           <CardTitle>Jobs</CardTitle>
-          <div className="mt-3 inline-flex flex-wrap items-center justify-center gap-1 rounded-lg bg-muted p-1">
+          <div className="mt-3 flex flex-wrap items-center justify-start gap-1 rounded-lg bg-muted p-1 w-fit">
             {FILTERS.map((f) => (
               <button
                 key={f}
@@ -316,21 +380,42 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
                       className="max-w-[200px] truncate font-mono text-xs text-muted-foreground"
                       title={JSON.stringify(job.data)}
                     >
-                      {JSON.stringify(job.data)}
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate">{JSON.stringify(job.data)}</span>
+                        <button
+                          onClick={() => handleCopy(job.data)}
+                          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          aria-label="Copy job data"
+                          title="Copy full JSON"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(job.createdAt).toLocaleTimeString()}
                     </TableCell>
                     <TableCell>
                       {job.status === 'failed' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={retrying === job.id}
-                          onClick={() => handleRetry(job.id)}
-                        >
-                          {retrying === job.id ? 'Retrying…' : 'Retry'}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={retrying === job.id}
+                            onClick={() => handleRetry(job.id)}
+                          >
+                            {retrying === job.id ? 'Retrying…' : 'Retry'}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={deleting === job.id}
+                            onClick={() => setConfirmDeleteId(job.id)}
+                            className="text-red-400 hover:bg-red-950/50 hover:text-red-300"
+                          >
+                            {deleting === job.id ? 'Deleting…' : 'Delete'}
+                          </Button>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>
@@ -352,6 +437,26 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
       </p>
 
       <PoweredByFooter />
+
+      <AlertDialog open={confirmDeleteId !== null} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this job?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the job record. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmDeleteId && handleDelete(confirmDeleteId)}
+              className="bg-none bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

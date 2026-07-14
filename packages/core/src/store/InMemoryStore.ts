@@ -58,6 +58,10 @@ export class InMemoryStore implements IStore {
     return [];
   }
 
+  async deleteJob(jobId: string): Promise<void> {
+    this.jobs.delete(jobId);
+  }
+
   async checkHealth(): Promise<import("../types").ComponentHealth> {
     return { status: "up" };
   }

@@ -188,6 +188,7 @@ All routes below require a logged-in session (see [Dashboard security](#dashboar
 | GET | `/queueway/jobs/:id` | Get one job |
 | GET | `/queueway/dlq?limit=` | List failed (dead-lettered) jobs |
 | POST | `/queueway/jobs/:id/retry` | Re-queue a job (resets attempts to 0) |
+| DELETE | `/queueway/jobs/:id` | Permanently delete a job record |
 
 Auth routes (always public, obviously): `POST /auth/signup`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `GET /auth/status`, `POST /auth/forgot-password`, `POST /auth/reset-password`.
 

@@ -23,6 +23,11 @@ function findFile(names: string[]): string | null {
   return null;
 }
 
+function hasJobsDirectory(): boolean {
+  const dir = path.resolve(process.cwd(), "jobs");
+  return fs.existsSync(dir) && fs.statSync(dir).isDirectory();
+}
+
 const MAX_RESTARTS_PER_WINDOW = 5;
 const RESTART_WINDOW_MS = 60_000;
 const RESTART_DELAY_MS = 1000;
@@ -110,9 +115,9 @@ function runWatchdog(port: string, isDaemonChild: boolean) {
     );
     logger.info("   Run `queueway init` to create one.");
   }
-  if (!jobsPath) {
+  if (!jobsPath && !hasJobsDirectory()) {
     logger.info(
-      "ℹ️  No queueway.jobs.js found — server will run with no job handlers registered.",
+      "ℹ️  No queueway.jobs.js or jobs/ directory found — server will run with no job handlers registered.",
     );
     logger.info("   Run `queueway init` to generate a starter file.");
   }

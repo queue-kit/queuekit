@@ -14,6 +14,8 @@ export interface IStore {
    * nothing to recover since the store itself started empty this run.
    */
   recoverStuckJobs(): Promise<Job[]>;
+  /** Permanently removes a job record — used for deleting jobs out of the DLQ. */
+  deleteJob(jobId: string): Promise<void>;
   /** Real, live check — actually verifies the database connection is working right now. */
   checkHealth(): Promise<ComponentHealth>;
 }

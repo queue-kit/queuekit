@@ -136,6 +136,10 @@ export class PostgreSQLStore implements IStore {
     }));
   }
 
+  async deleteJob(jobId: string): Promise<void> {
+    await this.pool.query(`DELETE FROM queueway_jobs WHERE id = $1`, [jobId]);
+  }
+
   async checkHealth(): Promise<import("../types").ComponentHealth> {
     try {
       const start = Date.now();

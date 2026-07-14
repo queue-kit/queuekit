@@ -80,6 +80,16 @@ export async function createServer(queue: Queueway): Promise<Express> {
     res.json({ ok: true, jobId: req.params.id, status: "pending" });
   }));
 
+  app.delete("/queueway/jobs/:id", asyncRoute(async (req, res) => {
+    const job = await queue.getJob(req.params.id);
+    if (!job) {
+      res.status(404).json({ error: "Job not found" });
+      return;
+    }
+    await queue.deleteJob(req.params.id);
+    res.json({ ok: true, jobId: req.params.id, deleted: true });
+  }));
+
   return app;
 }
 

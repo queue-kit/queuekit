@@ -256,6 +256,13 @@ export class Queueway {
     await this.broker.publish(job.eventName, job);
   }
 
+  /** Permanently removes a job record — e.g. deleting a job out of the DLQ you don't want to retry. */
+  async deleteJob(jobId: string) {
+    const job = await this.store.getJob(jobId);
+    if (!job) throw new Error(`Job ${jobId} not found`);
+    await this.store.deleteJob(jobId);
+  }
+
   /** Real health check — actually pings the broker + database right now. */
   async getHealth() {
     return this.healthCheck.getStatus();

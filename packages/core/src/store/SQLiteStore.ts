@@ -152,6 +152,14 @@ export class SQLiteStore implements IStore {
     });
   }
 
+  async deleteJob(jobId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.db.run(`DELETE FROM queueway_jobs WHERE id = ?`, [jobId], (err) =>
+        err ? reject(err) : resolve(),
+      );
+    });
+  }
+
   async checkHealth(): Promise<import("../types").ComponentHealth> {
     return new Promise((resolve) => {
       const start = Date.now();
