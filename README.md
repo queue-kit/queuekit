@@ -176,6 +176,29 @@ You're not boxed into that one file — it's just an entry point, so `require()`
 
 ---
 
+## 🧩 Library API — do everything the dashboard does, in code
+
+Every action the dashboard/REST API can do is also a plain method on `queue` — no dashboard, no HTTP calls needed, if you'd rather manage jobs directly from your own code:
+
+```javascript
+const { queue } = require('queueway');
+
+await queue.publish(eventName, data);           // enqueue a job
+queue.subscribe(eventName, async (job) => {});  // register a handler
+
+await queue.getStats();                         // { jobs: { pending, processing, completed, failed, retrying, archived }, total }
+await queue.getJob(jobId);                       // single job, or null
+await queue.getJobs(status?, limit?);            // list jobs, optionally filtered by status
+await queue.getDLQ(limit?);                      // failed jobs currently in the dead-letter queue
+await queue.retryJob(jobId);                     // re-queue a job (resets attempts to 0)
+await queue.deleteJob(jobId);                    // permanently delete a job record
+await queue.getHealth();                         // real broker/database health check
+```
+
+These are the exact same methods the dashboard and `/queueway/*` REST routes call internally — so anything you can click in the dashboard, you can also do directly in your own scripts, cron jobs, or admin tooling.
+
+---
+
 ## 📡 REST API
 
 All routes below require a logged-in session (see [Dashboard security](#dashboard-security)).

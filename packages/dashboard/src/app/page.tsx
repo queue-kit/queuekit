@@ -396,8 +396,8 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
                       {new Date(job.createdAt).toLocaleTimeString()}
                     </TableCell>
                     <TableCell>
-                      {job.status === 'failed' && (
-                        <div className="flex gap-2">
+                      <div className="flex gap-2">
+                        {job.status === 'failed' && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -406,17 +406,17 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
                           >
                             {retrying === job.id ? 'Retrying…' : 'Retry'}
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled={deleting === job.id}
-                            onClick={() => setConfirmDeleteId(job.id)}
-                            className="text-red-400 hover:bg-red-950/50 hover:text-red-300"
-                          >
-                            {deleting === job.id ? 'Deleting…' : 'Delete'}
-                          </Button>
-                        </div>
-                      )}
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={deleting === job.id}
+                          onClick={() => setConfirmDeleteId(job.id)}
+                          className="text-red-400 hover:bg-red-950/50 hover:text-red-300"
+                        >
+                          {deleting === job.id ? 'Deleting…' : 'Delete'}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
