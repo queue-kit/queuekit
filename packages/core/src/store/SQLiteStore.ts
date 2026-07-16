@@ -1,4 +1,6 @@
 import sqlite3 from "sqlite3";
+import fs from "fs";
+import path from "path";
 import { IStore } from "./IStore";
 import { Job } from "../types";
 import { logger } from "../logging/Logger";
@@ -10,8 +12,12 @@ import { logger } from "../logging/Logger";
 export class SQLiteStore implements IStore {
   private db: sqlite3.Database;
 
-  constructor(filename = process.env.SQLITE_PATH || "./queueway.db") {
-    this.db = new sqlite3.Database(filename);
+  constructor(filename?: string) {
+    const dbPath =
+      filename ?? process.env.SQLITE_PATH ?? path.resolve(process.cwd(), ".queueway", "queueway.db");
+    const dir = path.dirname(dbPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    this.db = new sqlite3.Database(dbPath);
   }
 
   async initialize(): Promise<void> {
