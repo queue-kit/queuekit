@@ -235,10 +235,19 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
     }
   }
 
-  async function handleCopy(data: unknown) {
+  async function handleCopyData(data: unknown) {
     const success = await copyToClipboard(JSON.stringify(data, null, 2));
     if (success) {
       toast.success('Copied job data to clipboard');
+    } else {
+      toast.error('Could not copy — try selecting the text manually');
+    }
+  }
+
+  async function handleCopyId(id: string) {
+    const success = await copyToClipboard(id);
+    if (success) {
+      toast.success('Copied job ID to clipboard');
     } else {
       toast.error('Could not copy — try selecting the text manually');
     }
@@ -370,7 +379,19 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
               ) : (
                 jobs.map((job) => (
                   <TableRow key={job.id}>
-                    <TableCell className="font-mono text-xs">{job.id.slice(0, 8)}…</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span title={job.id}>{job.id.slice(0, 8)}…</span>
+                        <button
+                          onClick={() => handleCopyId(job.id)}
+                          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          aria-label="Copy job ID"
+                          title="Copy full job ID"
+                        >
+                          <Copy className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </TableCell>
                     <TableCell>{job.eventName}</TableCell>
                     <TableCell>
                       <Badge variant={job.status}>{job.status}</Badge>
@@ -383,7 +404,7 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
                       <div className="flex items-center gap-1.5">
                         <span className="truncate">{JSON.stringify(job.data)}</span>
                         <button
-                          onClick={() => handleCopy(job.data)}
+                          onClick={() => handleCopyData(job.data)}
                           className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                           aria-label="Copy job data"
                           title="Copy full JSON"
@@ -397,16 +418,18 @@ function DashboardContent({ userEmail, onLogout }: { userEmail: string | null; o
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {job.status === 'failed' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={retrying === job.id}
-                            onClick={() => handleRetry(job.id)}
-                          >
-                            {retrying === job.id ? 'Retrying…' : 'Retry'}
-                          </Button>
-                        )}
+                        <div className="w-[76px] shrink-0">
+                          {job.status === 'failed' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={retrying === job.id}
+                              onClick={() => handleRetry(job.id)}
+                            >
+                              {retrying === job.id ? 'Retrying…' : 'Retry'}
+                            </Button>
+                          )}
+                        </div>
                         <Button
                           variant="ghost"
                           size="sm"

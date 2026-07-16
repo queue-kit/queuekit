@@ -234,6 +234,22 @@ There is only **one** npm package to install (`queueway`) — the CLI, library, 
 
 ---
 
+## 🧹 Uninstalling
+
+`npm uninstall queueway` removes the package itself, but **not** the files it created while running — this is deliberate, since those files may contain real data (dashboard accounts, job history) you might not want silently deleted just because you removed a dependency:
+
+- `.queueway/` — dashboard login (`auth.db`), job data if using SQLite (`queueway.db`), and logs
+- `queueway.config.js` / `queueway.jobs.js` — your config and job handlers (created by `queueway init`)
+
+If you're removing Queueway for good and want a clean slate, delete these yourself:
+
+```bash
+npm uninstall queueway
+rm -rf .queueway queueway.config.js queueway.jobs.js
+```
+
+---
+
 ## 🗺️ Roadmap
 
 - [x] CORE queue engine — In-Memory + SQLite, retry, DLQ, crash-recovery
